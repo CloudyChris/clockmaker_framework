@@ -4,13 +4,13 @@
 #define GAME_DATA_SPECIFICATIONS_H
 
 #pragma region godot_includes
-#include "core/string/ustring.h"
-#include "core/variant/dictionary.h"
+#include "../../../core/string/ustring.h"
+#include "../../../core/variant/dictionary.h"
 #pragma endregion godot_includes
 
 #pragma region cm_includes
-#include "modules/clockmakers_framework/cm_enums.h"
-#include "modules/clockmakers_framework/vector_hashmap_pair.h"
+#include "../cm_enums.h"
+#include "../vector_hashmap_pair.h"
 #pragma endregion cm_includes
 
 class GameDataTable;

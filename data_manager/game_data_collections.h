@@ -4,15 +4,15 @@
 #define GAME_DATA_COLLECTIONS_H
 
 #pragma region godot_includes
-#include "core/templates/hash_map.h"
-#include "core/templates/local_vector.h"
+#include "../../../core/templates/hash_map.h"
+#include "../../../core/templates/local_vector.h"
 #pragma endregion godot_includes
 
 #pragma region cm_includes
-#include "modules/clockmakers_framework/data_manager/game_data_specifications.h"
-#include "modules/clockmakers_framework/cm_enums.h"
-#include "modules/clockmakers_framework/uuid.h"
-#include "modules/clockmakers_framework/vector_hashmap_pair.h"
+#include "game_data_specifications.h"
+#include "../cm_enums.h"
+#include "../uuid.h"
+#include "../vector_hashmap_pair.h"
 #pragma endregion cm_includes
 
 class GameDataCollection;
@@ -74,8 +74,8 @@ public:
 	GameDataField *create_one(String p_field_name);
 	bool delete_one(String p_field_name);
 
-	HashMap<String, GameDataField *> get_one_const(LocalVector<String> p_field_names = LocalVector<String>()) const;
-	HashMap<String, GameDataField *> get_one(LocalVector<String> p_field_names = LocalVector<String>());
+	HashMap<String, GameDataField *> get_const(TightLocalVector<String> p_field_names = TightLocalVector<String>()) const;
+	HashMap<String, GameDataField *> get(TightLocalVector<String> p_field_names = TightLocalVector<String>());
 
 	bool can_merge(const GameDataEntry &p_game_data_entry) const;
 	bool merge(const GameDataEntry &p_game_data_entry);
@@ -135,8 +135,8 @@ public:
 	GameDataEntry *create_one(String p_uuid);
 	bool delete_one(String p_uuid);
 
-	HashMap<String, GameDataEntry *> get_const(Vector<String> p_uuids = Vector<String>()) const;
-	HashMap<String, GameDataEntry *> get(Vector<String> p_uuids = Vector<String>());
+	HashMap<String, GameDataEntry *> get_const(TightLocalVector<String> p_uuids = TightLocalVector<String>()) const;
+	HashMap<String, GameDataEntry *> get(TightLocalVector<String> p_uuids = TightLocalVector<String>());
 
 	bool can_merge(const GameDataTable &p_game_data_table) const;
 	bool merge(const GameDataTable &p_game_data_table);
@@ -194,8 +194,8 @@ public:
 	GameDataTable *create_one(String p_table_name);
 	bool delete_one(String p_table_name);
 
-	HashMap<String, GameDataTable *> get_const(Vector<String> p_table_names) const;
-	HashMap<String, GameDataTable *> get(Vector<String> p_table_names);
+	HashMap<String, GameDataTable *> get_const(TightLocalVector<String> p_table_names = TightLocalVector<String>()) const;
+	HashMap<String, GameDataTable *> get(TightLocalVector<String> p_table_names = TightLocalVector<String>());
 
 	bool can_merge(const GameDataCollection &p_game_data_collection) const;
 	bool merge(const GameDataCollection &p_game_data_collection);

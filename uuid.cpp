@@ -1,7 +1,6 @@
 /* uuid.cpp */
 
 #include "uuid.h"
-#include "core/object/object.h"
 
 UUID::UUID()
 	: uuid(nullptr)

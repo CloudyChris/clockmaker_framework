@@ -3,18 +3,18 @@
 #ifndef GAME_DATA_MANAGER_H
 #define GAME_DATA_MANAGER_H
 
-#include "core/string/ustring.h"
 #pragma region godot_includes
-#include "core/error/error_list.h"
-#include "core/object/worker_thread_pool.h"
-#include "core/os/thread.h"
+#include "../../../core/string/ustring.h"
+#include "../../../core/error/error_list.h"
+#include "../../../core/object/worker_thread_pool.h"
+#include "../../../core/os/thread.h"
 #pragma endregion godot_includes
 
 #pragma region cm_includes
-#include "modules/clockmakers_framework/data_manager/game_data_collections.h"
-#include "modules/clockmakers_framework/data_manager/game_data_specifications.h"
-#include "modules/clockmakers_framework/vector_hashmap_pair.h"
-#include "modules/clockmakers_framework/cm_enums.h"
+#include "game_data_collections.h"
+#include "game_data_specifications.h"
+#include "../vector_hashmap_pair.h"
+#include "../cm_enums.h"
 #pragma endregion cm_includes
 
 struct DataInfo
@@ -126,17 +126,17 @@ private:
 	// Below private methods don't have locks. Don't directly call these unless you know what you're doing x2
 	// COLLECTION
 	static GameDataCollection *get_collection(DataInfo p_data_info);
-	static Error set_collection(DataInfo p_data_info, const GameDataCollection &p_data_collection); // TODO
-	static Error merge_collection(DataInfo p_data_info, const GameDataCollection &p_data_collection); // TODO
+	static Error set_collection(DataInfo p_data_info, const GameDataCollection &p_data_collection);
+	static Error merge_collection(DataInfo p_data_info, const GameDataCollection &p_data_collection);
 
 	// TABLE SPECIFICATION
 	static TableSpecification *get_data_table_specification(DataInfo p_data_info);
-	static Error set_data_table_specification(DataInfo p_data_info, const TableSpecification &p_table_specification); // TODO
+	static Error set_data_table_specification(DataInfo p_data_info, const TableSpecification &p_table_specification);
 
 	// TABLE
 	static GameDataTable *get_data_table(DataInfo p_data_info);
-	static Error set_data_table(DataInfo p_data_info, const GameDataTable &p_data_table); // TODO
-	static Error merge_data_table(DataInfo p_data_info, const GameDataTable &p_data_table); // TODO
+	static Error set_data_table(DataInfo p_data_info, const GameDataTable &p_data_table);
+	static Error merge_data_table(DataInfo p_data_info, const GameDataTable &p_data_table);
 
 	// ENTRY
 	static GameDataEntry *get_data_entry(DataInfo p_data_info);

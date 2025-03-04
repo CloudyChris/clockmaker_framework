@@ -1,8 +1,8 @@
 /* game_data_collections.cpp */
 
-#include "modules/clockmakers_framework/data_manager/game_data_collections.h"
-#include "modules/clockmakers_framework/data_manager/game_data_manager.h"
-#include "modules/clockmakers_framework/cm_enums.h"
+#include "game_data_collections.h"
+#include "game_data_manager.h"
+#include "../cm_enums.h"
 
 void GameDataField::from_dict(Dictionary p_dict)
 {
@@ -91,12 +91,12 @@ GameDataField *GameDataEntry::create_one(String p_field_name)
 	return fields.create_one(p_field_name);
 }
 
-HashMap<String, GameDataField *> GameDataEntry::get_one_const(LocalVector<String> p_field_names) const
+HashMap<String, GameDataField *> GameDataEntry::get_const(TightLocalVector<String> p_field_names) const
 {
 	return fields.get_const(p_field_names);
 }
 
-HashMap<String, GameDataField *> GameDataEntry::get_one(LocalVector<String> p_field_names)
+HashMap<String, GameDataField *> GameDataEntry::get(TightLocalVector<String> p_field_names)
 {
 	return fields.get(p_field_names);
 }
@@ -303,12 +303,12 @@ bool GameDataTable::delete_one(String p_uuid)
 	return entries.delete_one(p_uuid);
 }
 
-HashMap<String, GameDataEntry *> GameDataTable::get_const(Vector<String> p_uuids) const
+HashMap<String, GameDataEntry *> GameDataTable::get_const(TightLocalVector<String> p_uuids) const
 {
 	return entries.get_const(p_uuids);
 }
 
-HashMap<String, GameDataEntry *> GameDataTable::get(Vector<String> p_uuids)
+HashMap<String, GameDataEntry *> GameDataTable::get(TightLocalVector<String> p_uuids)
 {
 	return entries.get(p_uuids);
 }
@@ -509,12 +509,12 @@ bool GameDataCollection::delete_one(String p_table_name)
 	return tables.delete_one(p_table_name);
 }
 
-HashMap<String, GameDataTable *> GameDataCollection::get_const(Vector<String> p_table_names) const
+HashMap<String, GameDataTable *> GameDataCollection::get_const(TightLocalVector<String> p_table_names) const
 {
 	return tables.get_const(p_table_names);
 }
 
-HashMap<String, GameDataTable *> GameDataCollection::get(Vector<String> p_table_names)
+HashMap<String, GameDataTable *> GameDataCollection::get(TightLocalVector<String> p_table_names)
 {
 	return tables.get(p_table_names);
 }

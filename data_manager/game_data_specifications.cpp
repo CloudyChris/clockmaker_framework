@@ -1,7 +1,7 @@
 /* game_data_specifications.cpp */
 
-#include "modules/clockmakers_framework/data_manager/game_data_specifications.h"
-#include "core/variant/variant.h"
+#include "game_data_specifications.h"
+#include "../../../core/variant/variant.h"
 
 FieldSpecification::FieldSpecification()
 {
