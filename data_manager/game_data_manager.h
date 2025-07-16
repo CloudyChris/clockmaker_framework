@@ -14,6 +14,7 @@
 #include "game_data_collections.h"
 #include "game_data_specifications.h"
 #include "../vector_hashmap_pair.h"
+#include "../linked_list.h"
 #include "../cm_enums.h"
 #pragma endregion cm_includes
 
@@ -57,11 +58,11 @@ private:
 	static VectorHashMapPair<String, TableSpecification> table_specifications;
 
 	// Core entries cannot be overriden
-	static VectorHashMapPair<String, GameDataEntry *> core_entries_by_uuid;
+	static VectorHashMapPair<String, LinkedList<GameDataEntry *>> core_entries_by_uuid;
 
 	// Game entries can be overriden by mods
 	// Overrides happen in order, overriden resources will be unloaded
-	static VectorHashMapPair<String, GameDataEntry *> game_entries_by_uuid;
+	static VectorHashMapPair<String, LinkedList<GameDataEntry *>> game_entries_by_uuid;
 
 	// Paths at least should be unique... so we only need this
 	static VectorHashMapPair<String, GameDataEntry *> entries_by_path;
@@ -123,7 +124,7 @@ private:
 	static bool has(DataInfo p_data_info);
 	static Error remove(DataInfo p_data_info);
 
-	// Below private methods don't have locks. Don't directly call these unless you know what you're doing x2
+	// ONLY SET AND MERGE HAVE LOCKS BELOW, GET DOESN"T
 	// COLLECTION
 	static GameDataCollection *get_collection(DataInfo p_data_info);
 	static Error set_collection(DataInfo p_data_info, const GameDataCollection &p_data_collection);
@@ -140,8 +141,8 @@ private:
 
 	// ENTRY
 	static GameDataEntry *get_data_entry(DataInfo p_data_info);
-	static Error set_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry); // TODO
-	static Error merge_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry); // TODO
+	static Error set_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry);
+	static Error merge_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry);
 
 public:
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

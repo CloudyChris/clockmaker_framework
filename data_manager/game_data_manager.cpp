@@ -1,5 +1,6 @@
 /* game_data_manager.cpp */
 
+#include "modules/clockmaker_framework/cm_enums.h"
 #pragma region godot_includes
 #include "../../../core/error/error_list.h"
 #include "../../../core/io/json.h"
@@ -11,8 +12,8 @@
 
 VectorHashMapPair<String, TableSpecification> GameDataManager::table_specifications;
 
-VectorHashMapPair<String, GameDataEntry *> GameDataManager::core_entries_by_uuid;
-VectorHashMapPair<String, GameDataEntry *> GameDataManager::game_entries_by_uuid;
+VectorHashMapPair<String, LinkedList<GameDataEntry *>> GameDataManager::core_entries_by_uuid;
+VectorHashMapPair<String, LinkedList<GameDataEntry *>> GameDataManager::game_entries_by_uuid;
 
 VectorHashMapPair<String, GameDataEntry *> GameDataManager::entries_by_path;
 
@@ -394,7 +395,7 @@ bool GameDataManager::has(DataInfo p_data_info)
 
 Error GameDataManager::remove(DataInfo p_data_info)
 {
-	Error res = ERR_UNCONFIGURED;
+	Error res = ERR_QUERY_FAILED;
 
 	switch (p_data_info.data_type)
 	{
@@ -434,6 +435,7 @@ Error GameDataManager::remove(DataInfo p_data_info)
 					data_lock.write_unlock();
 					return res;
 			}
+			break;
 		case cm_enums::CM_DataType::CM_DATA_TYPE_TABLE_SPECIFICATION:
 			return table_specifications.delete_one(p_data_info.table) ? OK : ERR_QUERY_FAILED;
 		case cm_enums::CM_DataType::CM_DATA_TYPE_TABLE:
@@ -479,7 +481,7 @@ Error GameDataManager::remove(DataInfo p_data_info)
 					data_lock.write_unlock();
 					return res;
 			}
-			return ERR_QUERY_FAILED;
+			break;
 
 		case cm_enums::CM_DataType::CM_DATA_TYPE_ENTRY:
 			switch (p_data_info.collection_type)
@@ -500,8 +502,6 @@ Error GameDataManager::remove(DataInfo p_data_info)
 					}
 					data_lock.write_unlock();
 					return res;
-
-					return ERR_QUERY_FAILED;
 				case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_GAME:
 					if (p_data_info.collection != "GAME")
 					{
@@ -515,8 +515,6 @@ Error GameDataManager::remove(DataInfo p_data_info)
 					}
 					data_lock.write_unlock();
 					return res;
-
-					return ERR_QUERY_FAILED;
 				case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_MODS:
 				case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_TOOL:
 					data_lock.write_lock();
@@ -528,9 +526,11 @@ Error GameDataManager::remove(DataInfo p_data_info)
 						}
 					}
 					data_lock.write_unlock();
-					return res != ERR_UNCONFIGURED ? res : ERR_QUERY_FAILED;
+					return res;
 			}
+			break;
 	}
+	return ERR_QUERY_FAILED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -548,7 +548,6 @@ GameDataCollection *GameDataManager::get_collection(DataInfo p_data_info)
 		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_NONE:
 			ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection type none");
 			return nullptr;
-			break;
 		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_CORE:
 			if (p_data_info.collection != "CORE")
 			{
@@ -556,7 +555,6 @@ GameDataCollection *GameDataManager::get_collection(DataInfo p_data_info)
 				return nullptr;
 			}
 			return &core_collection;
-			break;
 		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_GAME:
 			if (p_data_info.collection != "GAME")
 			{
@@ -564,10 +562,8 @@ GameDataCollection *GameDataManager::get_collection(DataInfo p_data_info)
 				return nullptr;
 			}
 			return &game_collection;
-			break;
 		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_MODS:
 			return mods_collections.get_one(p_data_info.collection);
-			break;
 		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_TOOL:
 			return tools_collections.get_one(p_data_info.collection);
 	}
@@ -732,14 +728,54 @@ GameDataTable *GameDataManager::get_data_table(DataInfo p_data_info)
 		return nullptr;
 	}
 
-	GameDataCollection *collection_ptr = get_collection(p_data_info);
-	if (!collection_ptr)
+	switch (p_data_info.collection_type)
 	{
-		ERR_PRINT_ED("[ ERROR ] No collection found that matches DataInfo");
-		return nullptr;
-	}
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_NONE:
+			ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection type none");
+			return nullptr;
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_CORE:
+		{
+			if (p_data_info.collection != "CORE")
+			{
+				ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection type-name mismatch");
+				return nullptr;
+			}
 
-	return collection_ptr->get_one(p_data_info.table);
+			return core_collection.get_one(p_data_info.table);
+		}
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_GAME:
+		{
+			if (p_data_info.collection != "GAME")
+			{
+				ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection type-name mismatch");
+				return nullptr;
+			}
+
+			return game_collection.get_one(p_data_info.table);
+		}
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_MODS:
+		{
+			GameDataCollection *collection_ptr = mods_collections.get_one(p_data_info.collection);
+			if (!collection_ptr)
+			{
+				ERR_PRINT_ED("[ ERROR ] No collection found that matches DataInfo");
+				return nullptr;
+			}
+
+			return collection_ptr->get_one(p_data_info.table);
+		}
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_TOOL:
+		{
+			GameDataCollection *collection_ptr = tools_collections.get_one(p_data_info.collection);
+			if (!collection_ptr)
+			{
+				ERR_PRINT_ED("[ ERROR ] No collection found that matches DataInfo");
+				return nullptr;
+			}
+
+			return collection_ptr->get_one(p_data_info.table);
+		}
+	}
 }
 
 Error GameDataManager::set_data_table(DataInfo p_data_info, const GameDataTable &p_data_table)
@@ -797,6 +833,7 @@ Error GameDataManager::set_data_table(DataInfo p_data_info, const GameDataTable 
 			if (!collection_ptr)
 			{
 				ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection not found");
+				data_lock.write_unlock();
 				return ERR_QUERY_FAILED;
 			}
 
@@ -817,6 +854,7 @@ Error GameDataManager::set_data_table(DataInfo p_data_info, const GameDataTable 
 			if (!collection_ptr)
 			{
 				ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection not found");
+				data_lock.write_unlock();
 				return ERR_QUERY_FAILED;
 			}
 
@@ -896,6 +934,7 @@ Error GameDataManager::merge_data_table(DataInfo p_data_info, const GameDataTabl
 			if (!collection_ptr)
 			{
 				ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection not found");
+				data_lock.write_unlock();
 				return ERR_QUERY_FAILED;
 			}
 
@@ -920,6 +959,7 @@ Error GameDataManager::merge_data_table(DataInfo p_data_info, const GameDataTabl
 			if (!collection_ptr)
 			{
 				ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection not found");
+				data_lock.write_unlock();
 				return ERR_QUERY_FAILED;
 			}
 
@@ -942,7 +982,6 @@ Error GameDataManager::merge_data_table(DataInfo p_data_info, const GameDataTabl
 
 GameDataEntry *GameDataManager::get_data_entry(DataInfo p_data_info)
 {
-
 	if (p_data_info.data_type != cm_enums::CM_DataType::CM_DATA_TYPE_ENTRY)
 	{
 		ERR_PRINT_ED("[ ERROR ] Bad DataInfo - wrong data_type");
@@ -956,12 +995,44 @@ GameDataEntry *GameDataManager::get_data_entry(DataInfo p_data_info)
 			return nullptr;
 			break;
 		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_CORE:
-			return *core_entries_by_uuid.get_one(p_data_info.entry);
+		{
+			if (p_data_info.collection != "CORE")
+			{
+				ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection type-name mismatch");
+				return nullptr;
+			}
+
+			GameDataTable *table_ptr = core_collection.get_one(p_data_info.table);
+
+			if (!table_ptr)
+			{
+				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
+				return nullptr;
+			}
+
+			return table_ptr->get_one(p_data_info.entry);
+		}
 		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_GAME:
+		{
+			if (p_data_info.collection != "GAME")
+			{
+				ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection type-name mismatch");
+				return nullptr;
+			}
+
+			GameDataTable *table_ptr = game_collection.get_one(p_data_info.table);
+
+			if (!table_ptr)
+			{
+				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
+				return nullptr;
+			}
+
+			return table_ptr->get_one(p_data_info.entry);
+		}
 		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_MODS:
-			return *game_entries_by_uuid.get_one(p_data_info.entry);
-		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_TOOL:
-			GameDataCollection *collection_ptr = get_collection(p_data_info);
+		{
+			GameDataCollection *collection_ptr = mods_collections.get_one(p_data_info.collection);
 			if (!collection_ptr)
 			{
 				ERR_PRINT_ED("[ ERROR ] No collection found that matches DataInfo");
@@ -977,17 +1048,273 @@ GameDataEntry *GameDataManager::get_data_entry(DataInfo p_data_info)
 			}
 
 			return table_ptr->get_one(p_data_info.entry);
+		}
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_TOOL:
+		{
+			GameDataCollection *collection_ptr = tools_collections.get_one(p_data_info.collection);
+			if (!collection_ptr)
+			{
+				ERR_PRINT_ED("[ ERROR ] No collection found that matches DataInfo");
+				return nullptr;
+			}
+
+			GameDataTable *table_ptr = collection_ptr->get_one(p_data_info.table);
+
+			if (!table_ptr)
+			{
+				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
+				return nullptr;
+			}
+
+			return table_ptr->get_one(p_data_info.entry);
+		}
 	}
 }
 
-Error GameDataManager::set_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry) // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+Error GameDataManager::set_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry)
 {
+	if (p_data_info.data_type != cm_enums::CM_DataType::CM_DATA_TYPE_ENTRY)
+	{
+		ERR_PRINT_ED("[ ERROR ] Bad DataInfo - wrong data_type");
+		return ERR_BUG;
+	}
+	switch (p_data_info.collection_type)
+	{
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_NONE:
+			ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection type none");
+			return ERR_BUG;
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_CORE:
+		{
+			if (p_data_info.collection != "CORE")
+			{
+				ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection type-name mismatch");
+				return ERR_BUG;
+			}
 
+			data_lock.write_lock();
+			GameDataTable *table_ptr = core_collection.get_one(p_data_info.table);
+
+			if (!table_ptr)
+			{
+				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
+				data_lock.write_unlock();
+				return ERR_CANT_RESOLVE;
+			}
+
+			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
+
+			if (!entry_ptr)
+			{
+				entry_ptr = table_ptr->create_one(p_data_info.entry);
+			}
+			entry_ptr->replace(p_data_entry);
+			data_lock.write_unlock();
+			return OK;
+		}
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_GAME:
+		{
+			if (p_data_info.collection != "GAME")
+			{
+				ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection type-name mismatch");
+				return ERR_BUG;
+			}
+
+			data_lock.write_lock();
+			GameDataTable *table_ptr = game_collection.get_one(p_data_info.table);
+
+			if (!table_ptr)
+			{
+				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
+				data_lock.write_unlock();
+				return ERR_CANT_RESOLVE;
+			}
+
+			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
+
+			if (!entry_ptr)
+			{
+				entry_ptr = table_ptr->create_one(p_data_info.entry);
+			}
+			entry_ptr->replace(p_data_entry);
+			data_lock.write_unlock();
+			return OK;
+		}
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_MODS:
+		{
+			data_lock.write_lock();
+			GameDataTable *table_ptr = mods_collections.get_one(p_data_info.table);
+
+			if (!table_ptr)
+			{
+				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
+				data_lock.write_unlock();
+				return ERR_CANT_RESOLVE;
+			}
+
+			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
+
+			if (!entry_ptr)
+			{
+				entry_ptr = table_ptr->create_one(p_data_info.entry);
+			}
+			entry_ptr->replace(p_data_entry);
+			data_lock.write_unlock();
+			return OK;
+		}
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_TOOL:
+		{
+			data_lock.write_lock();
+			GameDataTable *table_ptr = tools_collections.get_one(p_data_info.table);
+
+			if (!table_ptr)
+			{
+				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
+				data_lock.write_unlock();
+				return ERR_CANT_RESOLVE;
+			}
+
+			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
+
+			if (!entry_ptr)
+			{
+				entry_ptr = table_ptr->create_one(p_data_info.entry);
+			}
+			entry_ptr->replace(p_data_entry);
+			data_lock.write_unlock();
+			return OK;
+		}
+	}
 }
 
-Error GameDataManager::merge_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry) // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+Error GameDataManager::merge_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry)
 {
+	if (p_data_info.data_type != cm_enums::CM_DataType::CM_DATA_TYPE_ENTRY)
+	{
+		ERR_PRINT_ED("[ ERROR ] Bad DataInfo - wrong data_type");
+		return ERR_BUG;
+	}
+	switch (p_data_info.collection_type)
+	{
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_NONE:
+			ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection type none");
+			return ERR_BUG;
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_CORE:
+		{
+			if (p_data_info.collection != "CORE")
+			{
+				ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection type-name mismatch");
+				return ERR_BUG;
+			}
 
+			data_lock.write_lock();
+			GameDataTable *table_ptr = core_collection.get_one(p_data_info.table);
+
+			if (!table_ptr)
+			{
+				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
+				data_lock.write_unlock();
+				return ERR_CANT_RESOLVE;
+			}
+
+			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
+
+			if (!entry_ptr)
+			{
+				entry_ptr = table_ptr->create_one(p_data_info.entry);
+			}
+			if (entry_ptr->merge(p_data_entry))
+			{
+				data_lock.write_unlock();
+				return OK;
+			}
+			data_lock.write_unlock();
+			return ERR_CANT_RESOLVE;
+		}
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_GAME:
+		{
+			if (p_data_info.collection != "GAME")
+			{
+				ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection type-name mismatch");
+				return ERR_BUG;
+			}
+
+			data_lock.write_lock();
+			GameDataTable *table_ptr = game_collection.get_one(p_data_info.table);
+
+			if (!table_ptr)
+			{
+				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
+				data_lock.write_unlock();
+				return ERR_CANT_RESOLVE;
+			}
+
+			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
+
+			if (!entry_ptr)
+			{
+				entry_ptr = table_ptr->create_one(p_data_info.entry);
+			}
+			if (entry_ptr->merge(p_data_entry))
+			{
+				data_lock.write_unlock();
+				return OK;
+			}
+			data_lock.write_unlock();
+			return ERR_CANT_RESOLVE;
+		}
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_MODS:
+		{
+			data_lock.write_lock();
+			GameDataTable *table_ptr = mods_collections.get_one(p_data_info.table);
+
+			if (!table_ptr)
+			{
+				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
+				data_lock.write_unlock();
+				return ERR_CANT_RESOLVE;
+			}
+
+			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
+
+			if (!entry_ptr)
+			{
+				entry_ptr = table_ptr->create_one(p_data_info.entry);
+			}
+			if (entry_ptr->merge(p_data_entry))
+			{
+				data_lock.write_unlock();
+				return OK;
+			}
+			data_lock.write_unlock();
+			return ERR_CANT_RESOLVE;
+		}
+		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_TOOL:
+		{
+			data_lock.write_lock();
+			GameDataTable *table_ptr = tools_collections.get_one(p_data_info.table);
+
+			if (!table_ptr)
+			{
+				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
+				data_lock.write_unlock();
+				return ERR_CANT_RESOLVE;
+			}
+
+			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
+
+			if (!entry_ptr)
+			{
+				entry_ptr = table_ptr->create_one(p_data_info.entry);
+			}
+			if (entry_ptr->merge(p_data_entry))
+			{
+				data_lock.write_unlock();
+				return OK;
+			}
+			data_lock.write_unlock();
+			return ERR_CANT_RESOLVE;
+		}
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -53,7 +53,7 @@ GameDataEntry::~GameDataEntry()
 {
 	parent = nullptr;
 
-	fields.~VectorHashMapPair();
+	delete fields;
 }
 
 GameDataTable *GameDataEntry::get_parent() const
@@ -228,7 +228,7 @@ GameDataTable::~GameDataTable()
 {
 	table_specification = nullptr;
 	parent = nullptr;
-	entries.~VectorHashMapPair();
+	delete entries;
 }
 
 TableSpecification *GameDataTable::get_table_specification() const
@@ -441,7 +441,7 @@ GameDataCollection::GameDataCollection(const GameDataCollection &p_game_data_col
 
 GameDataCollection::~GameDataCollection()
 {
-	tables.~VectorHashMapPair();
+	delete tables;
 }
 
 String GameDataCollection::get_name() const
