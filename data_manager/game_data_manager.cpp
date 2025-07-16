@@ -380,7 +380,7 @@ bool GameDataManager::has(DataInfo p_data_info)
 					return res;
 				case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_TOOL:
 					data_lock.read_lock();
-					if (GameDataCollection *collection_ptr = get_collection(p_data_info))
+					if (GameDataCollection *collection_ptr = get_data_collection(p_data_info))
 					{
 						if (GameDataTable *table_ptr = collection_ptr->get_one(p_data_info.table))
 						{
@@ -518,7 +518,7 @@ Error GameDataManager::remove(DataInfo p_data_info)
 				case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_MODS:
 				case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_TOOL:
 					data_lock.write_lock();
-					if (GameDataCollection *collection_ptr = get_collection(p_data_info))
+					if (GameDataCollection *collection_ptr = get_data_collection(p_data_info))
 					{
 						if (GameDataTable *table_ptr = collection_ptr->get_one(p_data_info.table))
 						{
@@ -536,7 +536,7 @@ Error GameDataManager::remove(DataInfo p_data_info)
 ////////////////////////////////////////////////////////////////////////////////////////////
 // INTERNAL - specific methods --- THESE DON'T HAVE MUTEXES
 ////////////////////////////////////////////////////////////////////////////////////////////
-GameDataCollection *GameDataManager::get_collection(DataInfo p_data_info)
+GameDataCollection *GameDataManager::get_data_collection(DataInfo p_data_info)
 {
 	if (p_data_info.data_type != cm_enums::CM_DataType::CM_DATA_TYPE_COLLECTION)
 	{
@@ -569,7 +569,7 @@ GameDataCollection *GameDataManager::get_collection(DataInfo p_data_info)
 	}
 }
 
-Error GameDataManager::set_collection(DataInfo p_data_info, const GameDataCollection &p_data_collection)
+Error GameDataManager::set_data_collection(DataInfo p_data_info, const GameDataCollection &p_data_collection)
 {
 	if (p_data_info.data_type != cm_enums::CM_DataType::CM_DATA_TYPE_COLLECTION)
 	{
@@ -622,7 +622,7 @@ Error GameDataManager::set_collection(DataInfo p_data_info, const GameDataCollec
 	}
 }
 
-Error GameDataManager::merge_collection(DataInfo p_data_info, const GameDataCollection &p_data_collection)
+Error GameDataManager::merge_data_collection(DataInfo p_data_info, const GameDataCollection &p_data_collection)
 {
 	if (p_data_info.data_type != cm_enums::CM_DataType::CM_DATA_TYPE_COLLECTION)
 	{
@@ -707,6 +707,7 @@ Error GameDataManager::set_data_table_specification(DataInfo p_data_info, const 
 		ERR_PRINT_ED("[ ERROR ] Bad DataInfo - wrong data_type");
 		return ERR_BUG;
 	}
+
 	data_lock.write_lock();
 
 	table_specifications.delete_one(p_data_info.table);
@@ -1098,7 +1099,7 @@ Error GameDataManager::set_data_entry(DataInfo p_data_info, const GameDataEntry 
 			{
 				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
 				data_lock.write_unlock();
-				return ERR_CANT_RESOLVE;
+				return ERR_QUERY_FAILED;
 			}
 
 			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
@@ -1126,7 +1127,7 @@ Error GameDataManager::set_data_entry(DataInfo p_data_info, const GameDataEntry 
 			{
 				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
 				data_lock.write_unlock();
-				return ERR_CANT_RESOLVE;
+				return ERR_QUERY_FAILED;
 			}
 
 			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
@@ -1148,7 +1149,7 @@ Error GameDataManager::set_data_entry(DataInfo p_data_info, const GameDataEntry 
 			{
 				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
 				data_lock.write_unlock();
-				return ERR_CANT_RESOLVE;
+				return ERR_QUERY_FAILED;
 			}
 
 			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
@@ -1170,7 +1171,7 @@ Error GameDataManager::set_data_entry(DataInfo p_data_info, const GameDataEntry 
 			{
 				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
 				data_lock.write_unlock();
-				return ERR_CANT_RESOLVE;
+				return ERR_QUERY_FAILED;
 			}
 
 			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
@@ -1213,7 +1214,7 @@ Error GameDataManager::merge_data_entry(DataInfo p_data_info, const GameDataEntr
 			{
 				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
 				data_lock.write_unlock();
-				return ERR_CANT_RESOLVE;
+				return ERR_QUERY_FAILED;
 			}
 
 			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
@@ -1245,7 +1246,7 @@ Error GameDataManager::merge_data_entry(DataInfo p_data_info, const GameDataEntr
 			{
 				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
 				data_lock.write_unlock();
-				return ERR_CANT_RESOLVE;
+				return ERR_QUERY_FAILED;
 			}
 
 			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
@@ -1271,7 +1272,7 @@ Error GameDataManager::merge_data_entry(DataInfo p_data_info, const GameDataEntr
 			{
 				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
 				data_lock.write_unlock();
-				return ERR_CANT_RESOLVE;
+				return ERR_QUERY_FAILED;
 			}
 
 			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
@@ -1297,7 +1298,7 @@ Error GameDataManager::merge_data_entry(DataInfo p_data_info, const GameDataEntr
 			{
 				ERR_PRINT_ED("[ ERROR ] No table found that matches DataInfo");
 				data_lock.write_unlock();
-				return ERR_CANT_RESOLVE;
+				return ERR_QUERY_FAILED;
 			}
 
 			GameDataEntry *entry_ptr = table_ptr->get_one(p_data_info.entry);
@@ -1372,7 +1373,7 @@ Dictionary GameDataManager::get_bind(Dictionary p_data_info)
 		case cm_enums::CM_DataType::CM_DATA_TYPE_COLLECTION:
 		{
 			data_lock.read_lock();
-			GameDataCollection *collection = get_collection(data_info);
+			GameDataCollection *collection = get_data_collection(data_info);
 			if(!collection)
 			{
 				ERR_PRINT_ED("[ ERROR ] No collection found for DataInfo");
@@ -1412,14 +1413,80 @@ Dictionary GameDataManager::get_bind(Dictionary p_data_info)
 	}
 }
 
-Error GameDataManager::set_bind(Dictionary p_data_info, Dictionary p_data_dict) // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+Error GameDataManager::set_bind(Dictionary p_data_info, Dictionary p_data_dict)
 {
+	DataInfo data_info;
+	data_info.from_dict(p_data_info);
 
+	switch(data_info.data_type)
+	{
+		case cm_enums::CM_DataType::CM_DATA_TYPE_NONE:
+			ERR_PRINT_ED("[ ERROR ] Bad DataInfo - wrong data_type");
+			return ERR_BUG;
+
+		case cm_enums::CM_DataType::CM_DATA_TYPE_TABLE_SPECIFICATION:
+		{
+			TableSpecification t_spec;
+			t_spec.from_dict(p_data_dict);
+			return set_data_table_specification(data_info, t_spec);
+		}
+		case cm_enums::CM_DataType::CM_DATA_TYPE_COLLECTION:
+		{
+			GameDataCollection collection;
+			collection.from_dict(p_data_dict);
+			return set_data_collection(data_info, collection);
+		}
+		case cm_enums::CM_DataType::CM_DATA_TYPE_TABLE:
+		{
+			GameDataTable table;
+			table.from_dict(p_data_dict);
+			return set_data_table(data_info, table);
+		}
+		case cm_enums::CM_DataType::CM_DATA_TYPE_ENTRY:
+		{
+			GameDataEntry entry;
+			entry.from_dict(p_data_dict);
+			return set_data_entry(data_info, entry);
+		}
+	}
 }
 
-Error GameDataManager::merge_bind(Dictionary p_data_info, Dictionary p_data_dict) // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+Error GameDataManager::merge_bind(Dictionary p_data_info, Dictionary p_data_dict)
 {
+	DataInfo data_info;
+	data_info.from_dict(p_data_info);
 
+	switch(data_info.data_type)
+	{
+		case cm_enums::CM_DataType::CM_DATA_TYPE_NONE:
+			ERR_PRINT_ED("[ ERROR ] Bad DataInfo - wrong data_type");
+			return ERR_BUG;
+
+		case cm_enums::CM_DataType::CM_DATA_TYPE_TABLE_SPECIFICATION:
+		{
+			TableSpecification t_spec;
+			t_spec.from_dict(p_data_dict);
+			return set_data_table_specification(data_info, t_spec);
+		}
+		case cm_enums::CM_DataType::CM_DATA_TYPE_COLLECTION:
+		{
+			GameDataCollection collection;
+			collection.from_dict(p_data_dict);
+			return merge_data_collection(data_info, collection);
+		}
+		case cm_enums::CM_DataType::CM_DATA_TYPE_TABLE:
+		{
+			GameDataTable table;
+			table.from_dict(p_data_dict);
+			return merge_data_table(data_info, table);
+		}
+		case cm_enums::CM_DataType::CM_DATA_TYPE_ENTRY:
+		{
+			GameDataEntry entry;
+			entry.from_dict(p_data_dict);
+			return merge_data_entry(data_info, entry);
+		}
+	}
 }
 
 Error GameDataManager::remove_bind(Dictionary p_data_info)

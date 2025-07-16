@@ -126,9 +126,9 @@ private:
 
 	// ONLY SET AND MERGE HAVE LOCKS BELOW, GET DOESN"T
 	// COLLECTION
-	static GameDataCollection *get_collection(DataInfo p_data_info);
-	static Error set_collection(DataInfo p_data_info, const GameDataCollection &p_data_collection);
-	static Error merge_collection(DataInfo p_data_info, const GameDataCollection &p_data_collection);
+	static GameDataCollection *get_data_collection(DataInfo p_data_info);
+	static Error set_data_collection(DataInfo p_data_info, const GameDataCollection &p_data_collection);
+	static Error merge_data_collection(DataInfo p_data_info, const GameDataCollection &p_data_collection);
 
 	// TABLE SPECIFICATION
 	static TableSpecification *get_data_table_specification(DataInfo p_data_info);
@@ -161,8 +161,8 @@ public:
 	static bool has_bind(Dictionary p_data_info);
 
 	static Dictionary get_bind(Dictionary p_data_info);
-	static Error set_bind(Dictionary p_data_info, Dictionary p_data_dict); // TODO
-	static Error merge_bind(Dictionary p_data_info, Dictionary p_data_dict); // TODO
+	static Error set_bind(Dictionary p_data_info, Dictionary p_data_dict);
+	static Error merge_bind(Dictionary p_data_info, Dictionary p_data_dict);
 
 	static Error remove_bind(Dictionary p_data_info);
 
