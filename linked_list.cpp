@@ -16,7 +16,31 @@ const T &LinkedList<T>::pop_head()
 }
 
 template <typename T>
-const T &LinkedList<T>::pop_tail()
+void LinkedList<T>::prepend(const T &p_data)
+{
+	LinkedListNode<T> *new_node = new LinkedListNode<T>;
+	new_node->value = p_data;
+
+	new_node->next = head;
+	head = new_node;
+	return;
+}
+
+template <typename T>
+DoubleLinkedListNode<T>::DoubleLinkedListNode(const T &p_value)
+	: value(p_value)
+{}
+
+template <typename T>
+const T &DoubleLinkedList<T>::pop_head()
+{
+	const T &r_value = head->value;
+	head = head->next;
+	return r_value;
+}
+
+template <typename T>
+const T &DoubleLinkedList<T>::pop_tail()
 {
 	const T &r_value = tail->value;
 	tail = tail->prev;
@@ -24,9 +48,9 @@ const T &LinkedList<T>::pop_tail()
 }
 
 template <typename T>
-void LinkedList<T>::append(const T &p_data)
+void DoubleLinkedList<T>::append(const T &p_data)
 {
-	LinkedListNode<T> *new_node = new LinkedListNode<T>;
+	DoubleLinkedListNode<T> *new_node = new DoubleLinkedListNode<T>;
 	new_node->value = p_data;
 
 	if (tail)
@@ -40,9 +64,9 @@ void LinkedList<T>::append(const T &p_data)
 }
 
 template <typename T>
-void LinkedList<T>::prepend(const T &p_data)
+void DoubleLinkedList<T>::prepend(const T &p_data)
 {
-	LinkedListNode<T> *new_node = new LinkedListNode<T>;
+	DoubleLinkedListNode<T> *new_node = new DoubleLinkedListNode<T>;
 	new_node->value = p_data;
 
 	if (head)

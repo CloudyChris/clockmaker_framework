@@ -26,6 +26,7 @@ struct DataInfo
 	String collection = "";
 	String table = "";
 	String entry = UUID::empty().get_uuid_string_bind();
+	bool full_resolve = false;
 
 	Dictionary to_dict() const;
 	void from_dict(Dictionary p_dict);
@@ -58,7 +59,7 @@ private:
 	static VectorHashMapPair<String, TableSpecification> table_specifications;
 
 	// Core entries cannot be overriden
-	static VectorHashMapPair<String, LinkedList<GameDataEntry *>> core_entries_by_uuid;
+	static VectorHashMapPair<String, GameDataEntry *> core_entries_by_uuid;
 
 	// Game entries can be overriden by mods
 	// Overrides happen in order, overriden resources will be unloaded
@@ -143,6 +144,9 @@ private:
 	static GameDataEntry *get_data_entry(DataInfo p_data_info);
 	static Error set_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry);
 	static Error merge_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry);
+
+	// UTIL / game_entries_by_uuid
+	static Error _override_data_entry(DataInfo p_data_info); // TODO
 
 public:
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

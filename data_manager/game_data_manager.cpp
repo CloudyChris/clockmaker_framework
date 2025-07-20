@@ -1,6 +1,6 @@
 /* game_data_manager.cpp */
 
-#include "modules/clockmaker_framework/cm_enums.h"
+#include "../cm_enums.h"
 #pragma region godot_includes
 #include "../../../core/error/error_list.h"
 #include "../../../core/io/json.h"
@@ -12,7 +12,7 @@
 
 VectorHashMapPair<String, TableSpecification> GameDataManager::table_specifications;
 
-VectorHashMapPair<String, LinkedList<GameDataEntry *>> GameDataManager::core_entries_by_uuid;
+VectorHashMapPair<String, GameDataEntry *> GameDataManager::core_entries_by_uuid;
 VectorHashMapPair<String, LinkedList<GameDataEntry *>> GameDataManager::game_entries_by_uuid;
 
 VectorHashMapPair<String, GameDataEntry *> GameDataManager::entries_by_path;
@@ -997,6 +997,12 @@ GameDataEntry *GameDataManager::get_data_entry(DataInfo p_data_info)
 			break;
 		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_CORE:
 		{
+
+			if (!p_data_info.full_resolve)
+			{
+				return core_entries_by_uuid.get_one(p_data_info.entry);
+			}
+
 			if (p_data_info.collection != "CORE")
 			{
 				ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection type-name mismatch");
@@ -1015,6 +1021,11 @@ GameDataEntry *GameDataManager::get_data_entry(DataInfo p_data_info)
 		}
 		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_GAME:
 		{
+			if (!p_data_info.full_resolve)
+			{
+				return game_entries_by_uuid.get_one(p_data_info.entry).head->value;
+			}
+
 			if (p_data_info.collection != "GAME")
 			{
 				ERR_PRINT_ED("[ ERROR ] Bad DataInfo - collection type-name mismatch");
@@ -1033,6 +1044,11 @@ GameDataEntry *GameDataManager::get_data_entry(DataInfo p_data_info)
 		}
 		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_MODS:
 		{
+			if (!p_data_info.full_resolve)
+			{
+				return game_entries_by_uuid.get_one(p_data_info.entry).head->value;
+			}
+
 			GameDataCollection *collection_ptr = mods_collections.get_one(p_data_info.collection);
 			if (!collection_ptr)
 			{
@@ -1072,7 +1088,7 @@ GameDataEntry *GameDataManager::get_data_entry(DataInfo p_data_info)
 	}
 }
 
-Error GameDataManager::set_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry)
+Error GameDataManager::set_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry) // TODO: handle quick search
 {
 	if (p_data_info.data_type != cm_enums::CM_DataType::CM_DATA_TYPE_ENTRY)
 	{
@@ -1367,6 +1383,7 @@ Dictionary GameDataManager::get_bind(Dictionary p_data_info)
 				return Dictionary();
 			}
 			res = t_spec->to_dict();
+			t_spec = nullptr;
 			data_lock.read_unlock();
 			return res;
 		}
@@ -1380,6 +1397,7 @@ Dictionary GameDataManager::get_bind(Dictionary p_data_info)
 				return Dictionary();
 			}
 			res = collection->to_dict();
+			collection = nullptr;
 			data_lock.read_unlock();
 			return res;
 		}
@@ -1393,6 +1411,7 @@ Dictionary GameDataManager::get_bind(Dictionary p_data_info)
 				return Dictionary();
 			}
 			res = table->to_dict();
+			table = nullptr;
 			data_lock.read_unlock();
 			return res;
 		}
@@ -1407,6 +1426,7 @@ Dictionary GameDataManager::get_bind(Dictionary p_data_info)
 			}
 
 			res = entry->to_dict();
+			entry = nullptr;
 			data_lock.read_unlock();
 			return res;
 		}

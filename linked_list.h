@@ -11,7 +11,6 @@ struct LinkedListNode
 
 	T value;
 	LinkedListNode<T>* next = nullptr;
-	LinkedListNode<T>* prev = nullptr;
 };
 
 // Double linked linked list
@@ -19,7 +18,28 @@ template <typename T>
 struct LinkedList
 {
 	LinkedListNode<T> *head = nullptr;
-	LinkedListNode<T> *tail = nullptr;
+
+	const T &pop_head();
+	void prepend(const T &p_data);
+};
+
+template <typename T>
+struct DoubleLinkedListNode
+{
+	DoubleLinkedListNode() = delete;
+	DoubleLinkedListNode(const T &p_value);
+
+	T value;
+	DoubleLinkedListNode<T>* next = nullptr;
+	DoubleLinkedListNode<T>* prev = nullptr;
+};
+
+// Double linked linked list
+template <typename T>
+struct DoubleLinkedList
+{
+	DoubleLinkedListNode<T> *head = nullptr;
+	DoubleLinkedListNode<T> *tail = nullptr;
 
 	const T &pop_head();
 	const T &pop_tail();
