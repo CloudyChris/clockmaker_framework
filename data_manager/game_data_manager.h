@@ -145,9 +145,6 @@ private:
 	static Error set_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry);
 	static Error merge_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry);
 
-	// UTIL / game_entries_by_uuid
-	static Error _override_data_entry(DataInfo p_data_info); // TODO
-
 public:
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Load & Save Data (these launch threaded methods)

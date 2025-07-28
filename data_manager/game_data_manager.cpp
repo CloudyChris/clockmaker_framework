@@ -1088,13 +1088,14 @@ GameDataEntry *GameDataManager::get_data_entry(DataInfo p_data_info)
 	}
 }
 
-Error GameDataManager::set_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry) // TODO: handle quick search
+Error GameDataManager::set_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry)
 {
 	if (p_data_info.data_type != cm_enums::CM_DataType::CM_DATA_TYPE_ENTRY)
 	{
 		ERR_PRINT_ED("[ ERROR ] Bad DataInfo - wrong data_type");
 		return ERR_BUG;
 	}
+
 	switch (p_data_info.collection_type)
 	{
 		case cm_enums::CM_DataCollectionType::CM_DATA_COLLECTION_TYPE_NONE:
@@ -1125,6 +1126,14 @@ Error GameDataManager::set_data_entry(DataInfo p_data_info, const GameDataEntry 
 				entry_ptr = table_ptr->create_one(p_data_info.entry);
 			}
 			entry_ptr->replace(p_data_entry);
+
+			// Handling quick search lists
+			if (!entries_by_path.has(p_data_info.path))
+			{
+				GameDataEntry **path_list_entry = entries_by_path.create_one(p_data_info.path);
+				*path_list_entry = entry_ptr;
+			}
+
 			data_lock.write_unlock();
 			return OK;
 		}
@@ -1153,6 +1162,16 @@ Error GameDataManager::set_data_entry(DataInfo p_data_info, const GameDataEntry 
 				entry_ptr = table_ptr->create_one(p_data_info.entry);
 			}
 			entry_ptr->replace(p_data_entry);
+
+			// Handling quick search lists
+			if (!entries_by_path.has(p_data_info.path))
+			{
+				GameDataEntry **path_list_entry = entries_by_path.create_one(p_data_info.path);
+				*path_list_entry = entry_ptr;
+
+				game_entries_by_uuid.get_one(p_data_info.entry).prepend(entry_ptr);
+			}
+
 			data_lock.write_unlock();
 			return OK;
 		}
@@ -1175,6 +1194,16 @@ Error GameDataManager::set_data_entry(DataInfo p_data_info, const GameDataEntry 
 				entry_ptr = table_ptr->create_one(p_data_info.entry);
 			}
 			entry_ptr->replace(p_data_entry);
+
+			// Handling quick search lists
+			if (!entries_by_path.has(p_data_info.path))
+			{
+				GameDataEntry **path_list_entry = entries_by_path.create_one(p_data_info.path);
+				*path_list_entry = entry_ptr;
+
+				game_entries_by_uuid.get_one(p_data_info.entry).prepend(entry_ptr);
+			}
+
 			data_lock.write_unlock();
 			return OK;
 		}
@@ -1197,6 +1226,14 @@ Error GameDataManager::set_data_entry(DataInfo p_data_info, const GameDataEntry 
 				entry_ptr = table_ptr->create_one(p_data_info.entry);
 			}
 			entry_ptr->replace(p_data_entry);
+
+			// Handling quick search lists
+			if (!entries_by_path.has(p_data_info.path))
+			{
+				GameDataEntry **path_list_entry = entries_by_path.create_one(p_data_info.path);
+				*path_list_entry = entry_ptr;
+			}
+
 			data_lock.write_unlock();
 			return OK;
 		}
