@@ -18,6 +18,9 @@
 #include "../cm_enums.h"
 #pragma endregion cm_includes
 
+// TODO: gotta implement binary serialization for data files
+// and add a toggle so that for development you can use text and for release you can use bin
+
 struct DataInfo
 {
 	cm_enums::CM_DataType data_type = cm_enums::CM_DataType::CM_DATA_TYPE_NONE;
@@ -144,16 +147,22 @@ private:
 	static GameDataEntry *get_data_entry(DataInfo p_data_info);
 	static Error set_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry);
 	static Error merge_data_entry(DataInfo p_data_info, const GameDataEntry &p_data_entry);
+	// NOTE: we should be able to manually specify whether we want a certain entry to remain on top of the stack
 
 public:
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Load & Save Data (these launch threaded methods)
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	static String request_load_bind(Dictionary p_data_info);
-
 	static String request_save_bind(Dictionary p_data_info);
-
 	static String request_validation_bind(Dictionary p_data_info);
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Load & Save Data (these use the immediate, blocking methods)
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	static Dictionary load_now_bind(Dictionary p_data_info);
+	static Dictionary save_now_bind(Dictionary p_data_info);
+	static Dictionary validate_now_bind(Dictionary p_data_info);
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Data getters and setters (these have mutexes)

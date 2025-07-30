@@ -97,8 +97,7 @@ void GameDataManager::_load_threaded(void *p_userdata)
 		return;
 	}
 
-	// TODO instead of directly setting this, put it in resolve_group::unvalidated
-	// and add validation task
+	// TODO instead of directly setting this, add validation task
 	set_bind(info.to_dict(), collection_dict);
 
 	return;
@@ -136,9 +135,7 @@ void GameDataManager::_save_threaded(void *p_userdata)
 		return;
 	}
 
-	// TODO validate the dict, at some point
-	// and add user preference for it
-
+	// TODO validate the dict and sign the file as validated (create a hash file)
 	String collection_json = dict_to_json(collection_dict, false, true);
 
 	Error err;
@@ -189,14 +186,30 @@ String GameDataManager::request_save(DataInfo p_data_info)
 	return io_task_uuid.get_uuid_string_bind();
 }
 
-String GameDataManager::request_validation(DataInfo p_data_info, Dictionary p_collection_dict) // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+String GameDataManager::request_validation(DataInfo p_data_info, Dictionary p_collection_dict)
 {
+	// TODO validate p_data_info thoroughly
+
+	// NOTE: instead of parsing the collection dict make a vector_hm_pair of <String (uuid), Dictionary (collection_dict)
+	// accessed under task_lock to avoid sending a shitload of data at once (if it matters at all, for now, leave as is)
+
+	tasks_lock.write_lock();
+
+	UUID validation_task_uuid = UUID();
+	ValidationTask *v_task = validation_tasks.create_one(validation_task_uuid.get_uuid_string_bind());
+	v_task->data_info = p_data_info;
+	v_task->collection_dict = p_collection_dict;
+	v_task->task_id = WorkerThreadPool::get_singleton()->add_native_task(&GameDataManager::_validate_threaded, v_task);
+	tasks_lock.write_unlock();
+
+	return validation_task_uuid.get_uuid_string_bind();
 }
 
 
 Error GameDataManager::get_io_task_status(String p_task_uuid) // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
 {
 	tasks_lock.read_lock();
+	tasks_lock.read_unlock();
 	return OK;
 }
 
