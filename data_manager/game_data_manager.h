@@ -47,14 +47,7 @@ public:
 		WorkerThreadPool::TaskID task_id = 0;
 		Error error = ERR_UNCONFIGURED;
 		DataInfo data_info;
-	};
-
-	struct ValidationTask
-	{
-		WorkerThreadPool::TaskID task_id = 0;
-		Error error = ERR_UNCONFIGURED;
-		DataInfo data_info;
-		Dictionary collection_dict;
+		String data_uuid = UUID::empty().get_uuid_string_bind();
 	};
 
 private:
@@ -88,11 +81,15 @@ private:
 	static RWLock data_lock;
 
 	// Resolve groups, and cleaning tasks bool
-	static RWLock tasks_lock;
+	static RWLock io_lock;
+	static RWLock validate_lock;
 
 	// to allow for defered loads
-	static VectorHashMapPair<String, ValidationTask> validation_tasks;
+	static VectorHashMapPair<String, Dictionary> data_to_be_validated;
+	static VectorHashMapPair<String, ThreadTask> validation_tasks;
+
 	static VectorHashMapPair<String, ThreadTask> io_tasks;
+
 	// to notify to drop/not process load tasks specifically. Saves are always processed
 	static bool cleaning_tasks;
 
@@ -105,6 +102,7 @@ private:
 	// Load & Save data - these launch the threaded methods
 	static String request_load(DataInfo p_data_info);
 	static String request_save(DataInfo p_data_info);
+	static String request_validation(DataInfo p_data_info, String p_data_uuid);
 	static String request_validation(DataInfo p_data_info, Dictionary p_collection_dict);
 
 	// Get the error code from io and validation task
@@ -119,7 +117,8 @@ private:
 	// Non-threaded stuff for immediate loads (blocking)
 	static Error load(DataInfo p_data_info);
 	static Error save(DataInfo p_data_info);
-	static Error validate(DataInfo p_data_info); // TODO
+	static Error validate(DataInfo p_data_info, String p_data_uuid); // TODO
+	static Error validate(DataInfo p_data_info, Dictionary p_collection_dict); // TODO
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Private data getters and setters

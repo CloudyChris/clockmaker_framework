@@ -22,10 +22,13 @@ GameDataCollection GameDataManager::game_collection;
 VectorHashMapPair<String, GameDataCollection> GameDataManager::mods_collections;
 VectorHashMapPair<String, GameDataCollection> GameDataManager::tools_collections;
 
-RWLock GameDataManager::tasks_lock;
 RWLock GameDataManager::data_lock;
 
-VectorHashMapPair<String, GameDataManager::ValidationTask> GameDataManager::validation_tasks;
+RWLock GameDataManager::io_lock;
+RWLock GameDataManager::validate_lock;
+
+VectorHashMapPair<String, Dictionary> GameDataManager::data_to_be_validated;
+VectorHashMapPair<String, GameDataManager::ThreadTask> GameDataManager::validation_tasks;
 VectorHashMapPair<String, GameDataManager::ThreadTask> GameDataManager::io_tasks;
 
 bool GameDataManager::cleaning_tasks = false;
@@ -66,24 +69,24 @@ void GameDataManager::_load_threaded(void *p_userdata)
 	ThreadTask *thread_task = (ThreadTask *)p_userdata;
 	DataInfo info;
 	{
-		tasks_lock.read_lock();
+		io_lock.read_lock();
 		info = thread_task->data_info;
-		tasks_lock.read_unlock();
+		io_lock.read_unlock();
 	}
 
 	if (!FileAccess::exists(info.path))
 	{
-		tasks_lock.write_lock();
+		io_lock.write_lock();
 		thread_task->error = ERR_FILE_NOT_FOUND;
-		tasks_lock.write_unlock();
+		io_lock.write_unlock();
 		return;
 	}
 
 	if(info.data_type == cm_enums::CM_DataType::CM_DATA_TYPE_NONE)
 	{
-		tasks_lock.write_lock();
+		io_lock.write_lock();
 		thread_task->error = ERR_BUG;
-		tasks_lock.write_unlock();
+		io_lock.write_unlock();
 		return;
 	}
 
@@ -91,13 +94,21 @@ void GameDataManager::_load_threaded(void *p_userdata)
 
 	if (collection_dict.is_empty())
 	{
-		tasks_lock.write_lock();
+		io_lock.write_lock();
 		thread_task->error = ERR_QUERY_FAILED;
-		tasks_lock.write_unlock();
+		io_lock.write_unlock();
 		return;
 	}
 
-	// TODO instead of directly setting this, add validation task
+	Error validation_result = validate(info, collection_dict);
+	if (validation_result != OK)
+	{
+		io_lock.write_lock();
+		thread_task->error = ERR_INVALID_DATA;
+		io_lock.write_unlock();
+		return;
+	}
+
 	set_bind(info.to_dict(), collection_dict);
 
 	return;
@@ -110,18 +121,18 @@ void GameDataManager::_save_threaded(void *p_userdata)
 	String resolve_group_id;
 	DataInfo info;
 	{
-		tasks_lock.read_lock();
+		io_lock.read_lock();
 		info = thread_task->data_info;
-		tasks_lock.read_unlock();
+		io_lock.read_unlock();
 	}
 
 	Dictionary collection_dict;
 
 	if(info.data_type == cm_enums::CM_DataType::CM_DATA_TYPE_NONE)
 	{
-			tasks_lock.write_lock();
+			io_lock.write_lock();
 			thread_task->error = ERR_BUG;
-			tasks_lock.write_unlock();
+			io_lock.write_unlock();
 			return;
 	}
 
@@ -129,13 +140,21 @@ void GameDataManager::_save_threaded(void *p_userdata)
 
 	if (collection_dict.is_empty())
 	{
-		tasks_lock.write_lock();
+		io_lock.write_lock();
 		thread_task->error = ERR_QUERY_FAILED;
-		tasks_lock.write_unlock();
+		io_lock.write_unlock();
 		return;
 	}
 
-	// TODO validate the dict and sign the file as validated (create a hash file)
+	Error validation_result = validate(info, collection_dict);
+	if (validation_result != OK)
+	{
+		io_lock.write_lock();
+		thread_task->error = ERR_INVALID_DATA;
+		io_lock.write_unlock();
+		return;
+	}
+
 	String collection_json = dict_to_json(collection_dict, false, true);
 
 	Error err;
@@ -158,49 +177,67 @@ String GameDataManager::request_load(DataInfo p_data_info)
 		return UUID::empty().get_uuid_string_bind();
 	}
 
-	// TODO validate p_data_info thoroughly
-
-	tasks_lock.write_lock();
+	io_lock.write_lock();
 
 	UUID io_task_uuid = UUID();
 	ThreadTask *t_task = io_tasks.create_one(io_task_uuid.get_uuid_string_bind());
 	t_task->data_info = p_data_info;
 	t_task->task_id = WorkerThreadPool::get_singleton()->add_native_task(&GameDataManager::_load_threaded, t_task);
-	tasks_lock.write_unlock();
+	io_lock.write_unlock();
 
 	return io_task_uuid.get_uuid_string_bind();
 }
 
 String GameDataManager::request_save(DataInfo p_data_info)
 {
-	// TODO validate p_data_info thoroughly
-
-	tasks_lock.write_lock();
+	io_lock.write_lock();
 
 	UUID io_task_uuid = UUID();
 	ThreadTask *t_task = io_tasks.create_one(io_task_uuid.get_uuid_string_bind());
 	t_task->data_info = p_data_info;
 	t_task->task_id = WorkerThreadPool::get_singleton()->add_native_task(&GameDataManager::_save_threaded, t_task);
-	tasks_lock.write_unlock();
+	io_lock.write_unlock();
 
 	return io_task_uuid.get_uuid_string_bind();
 }
 
-String GameDataManager::request_validation(DataInfo p_data_info, Dictionary p_collection_dict)
+String GameDataManager::request_validation(DataInfo p_data_info, String p_data_uuid)
 {
-	// TODO validate p_data_info thoroughly
-
-	// NOTE: instead of parsing the collection dict make a vector_hm_pair of <String (uuid), Dictionary (collection_dict)
+	// NOTE: instead of parsing the collection dict make a vector_hm_pair of <String (uuid), Dictionary (collection_dict)>
 	// accessed under task_lock to avoid sending a shitload of data at once (if it matters at all, for now, leave as is)
 
-	tasks_lock.write_lock();
+	validate_lock.write_lock();
 
 	UUID validation_task_uuid = UUID();
-	ValidationTask *v_task = validation_tasks.create_one(validation_task_uuid.get_uuid_string_bind());
+
+	Dictionary data = data_to_be_validated.get_one_const(p_data_uuid);
+
+	ThreadTask *v_task = validation_tasks.create_one(validation_task_uuid.get_uuid_string_bind());
 	v_task->data_info = p_data_info;
-	v_task->collection_dict = p_collection_dict;
+	v_task->data_uuid = validation_task_uuid;
 	v_task->task_id = WorkerThreadPool::get_singleton()->add_native_task(&GameDataManager::_validate_threaded, v_task);
-	tasks_lock.write_unlock();
+	validate_lock.write_unlock();
+
+	return validation_task_uuid.get_uuid_string_bind();
+}
+
+String GameDataManager::request_validation(DataInfo p_data_info, Dictionary p_collection_dict)
+{
+	// NOTE: instead of parsing the collection dict make a vector_hm_pair of <String (uuid), Dictionary (collection_dict)>
+	// accessed under task_lock to avoid sending a shitload of data at once (if it matters at all, for now, leave as is)
+
+	validate_lock.write_lock();
+
+	UUID validation_task_uuid = UUID();
+
+	Dictionary *data = data_to_be_validated.create_one(validation_task_uuid.get_uuid_string_bind());
+	*data = p_collection_dict;
+
+	ThreadTask *v_task = validation_tasks.create_one(validation_task_uuid.get_uuid_string_bind());
+	v_task->data_info = p_data_info;
+	v_task->data_uuid = validation_task_uuid;
+	v_task->task_id = WorkerThreadPool::get_singleton()->add_native_task(&GameDataManager::_validate_threaded, v_task);
+	validate_lock.write_unlock();
 
 	return validation_task_uuid.get_uuid_string_bind();
 }
@@ -208,8 +245,8 @@ String GameDataManager::request_validation(DataInfo p_data_info, Dictionary p_co
 
 Error GameDataManager::get_io_task_status(String p_task_uuid) // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
 {
-	tasks_lock.read_lock();
-	tasks_lock.read_unlock();
+	io_lock.read_lock();
+	io_lock.read_unlock();
 	return OK;
 }
 
@@ -248,8 +285,12 @@ Error GameDataManager::load(DataInfo p_data_info)
 		return ERR_QUERY_FAILED;
 	}
 
-	// TODO instead of directly setting this, put it in resolve_group::unvalidated
-	// and add validation task
+	Error validation_result = validate(p_data_info, collection_dict);
+	if (validation_result != OK)
+	{
+		return ERR_INVALID_DATA;
+	}
+
 	set_bind(p_data_info.to_dict(), collection_dict);
 
 	return OK;
@@ -271,8 +312,11 @@ Error GameDataManager::save(DataInfo p_data_info)
 		return ERR_QUERY_FAILED;
 	}
 
-	// TODO validate the dict, at some point
-	// and add user preference for it
+	Error validation_result = validate(p_data_info, collection_dict);
+	if (validation_result != OK)
+	{
+		return ERR_INVALID_DATA;
+	}
 
 	String collection_json = dict_to_json(collection_dict, false, true);
 
@@ -283,9 +327,14 @@ Error GameDataManager::save(DataInfo p_data_info)
 	return OK;
 }
 
-Error GameDataManager::validate(DataInfo p_data_info) // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+Error GameDataManager::validate(DataInfo p_data_info, String p_data_uuid) // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
 {
+	return OK;
+}
 
+Error GameDataManager::validate(DataInfo p_data_info, Dictionary p_collection_dict) // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+{
+	return OK;
 }
 
 bool GameDataManager::has(DataInfo p_data_info)
