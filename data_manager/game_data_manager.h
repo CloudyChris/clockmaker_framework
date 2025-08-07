@@ -1,5 +1,13 @@
 /* game_data_manager.h */
 
+/*
+** TODO replace game_data_entry with godot's resource, wrapped to also have a uuid
+** resources have RID which is a handle instead of a pointer, they also have their own memory pool
+** they have a cache and other useful stuff
+** so the whole fight will be to allow for creation of new resource types at runtime (probably by somehow compiling them or something)
+** and all of that can wait
+*/
+
 #ifndef GAME_DATA_MANAGER_H
 #define GAME_DATA_MANAGER_H
 
