@@ -78,6 +78,11 @@ private:
 
 	// Mutexes
 	// for data getters and setters
+	// TODO make a differential locking logic since this is stupid
+	// locking the whole db whenever you're modifying one lil thing is stupid
+	// don't resize the vector in the vhmp every operation to be able to use it as cow data, as god intended
+	// and only resize it on downtime, allowing finegrained locking on each layer (collection, table, entity, field)
+	// to enable a proper interface with gdscript that holds a pointer to the resource needed that has its own lock
 	static RWLock data_lock;
 
 	// Resolve groups, and cleaning tasks bool
@@ -152,6 +157,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Load & Save Data (these launch threaded methods)
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// TODO *_bind should be renamed to *_dict
 	static String request_load_bind(Dictionary p_data_info);
 	static String request_save_bind(Dictionary p_data_info);
 	static String request_validation_bind(Dictionary p_data_info);
