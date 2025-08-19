@@ -20,7 +20,7 @@ void initialize_clockmaker_framework_module(ModuleInitializationLevel p_level)
 	GameDataManager::initialize();
 
 	/* TRACKING */
-	GDREGISTER_CLASS(TrackedObject);
+	GDREGISTER_CLASS(TrackedResource);
 
 	_game_data_manager = memnew(cm_singleton_interfaces::GameDataManager);
 

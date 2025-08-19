@@ -4,9 +4,10 @@
 #define UUID_H
 
 #pragma region godot_includes
-#include "../../core/object/class_db.h"
-#include "../../core/variant/variant.h"
-#include "../../core/object/object.h"
+#include "core/object/class_db.h"
+#include "core/variant/variant.h"
+#include "core/object/object.h"
+#include "core/io/resource.h"
 #pragma endregion godot_includes
 
 class UUID
@@ -72,9 +73,9 @@ public:
 	~Tracked();
 };
 
-class TrackedObject : public Object
+class TrackedResource : public Resource
 {
-	GDCLASS(TrackedObject, Object);
+	GDCLASS(TrackedResource, Resource);
 
 protected:
 	UUID uuid;
@@ -83,7 +84,7 @@ protected:
 	static void _bind_methods();
 
 public:
-	static TrackedObject empty();
+	static TrackedResource empty();
 
 	const UUID &get_uuid() const;
 	UUID &get_uuid_m();
@@ -93,9 +94,9 @@ public:
 	void set_uuid_bind(PackedByteArray p_uuid);
 	void set_uuid_from_string(String p_uuid_string);
 
-	TrackedObject();
-	TrackedObject(const TrackedObject &p_tracked_object);
-	~TrackedObject();
+	TrackedResource();
+	TrackedResource(const TrackedResource &p_tracked_object);
+	~TrackedResource();
 };
 
 #endif

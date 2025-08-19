@@ -38,27 +38,6 @@ bool VectorHashMapPair<TKey, TValue>::has(TKey p_key) const
 }
 
 template <typename TKey, typename TValue>
-bool VectorHashMapPair<TKey, TValue>::erase(TKey p_key)
-{
-	if (!has(p_key))
-	{
-		ERR_PRINT_ED("Key does not exist");
-		return false;
-	}
-
-	uint8_t values_index = values_cache.get(p_key);
-
-	if (values_index < values.size())
-	{
-		values.remove_at(values_index);
-	}
-
-	values_cache.erase(p_key);
-
-	return true;
-}
-
-template <typename TKey, typename TValue>
 const TValue *VectorHashMapPair<TKey, TValue>::get_one_const(TKey p_key) const
 {
 	if (!values_cache.has(p_key))
@@ -111,11 +90,26 @@ TValue *VectorHashMapPair<TKey, TValue>::create_one(TKey p_key)
 template <typename TKey, typename TValue>
 bool VectorHashMapPair<TKey, TValue>::delete_one(TKey p_key)
 {
-	return erase(p_key);
+	if (!has(p_key))
+	{
+		ERR_PRINT_ED("Key does not exist");
+		return false;
+	}
+
+	uint8_t values_index = values_cache.get(p_key);
+
+	if (values_index < values.size())
+	{
+		values.remove_at(values_index);
+	}
+
+	values_cache.erase(p_key);
+
+	return true;
 }
 
 template <typename TKey, typename TValue>
-HashMap<TKey, TValue *> VectorHashMapPair<TKey, TValue>::get_const(TightLocalVector<TKey> p_keys) const
+HashMap<TKey, TValue *> VectorHashMapPair<TKey, TValue>::get_const(Vector<TKey> p_keys) const
 {
 	HashMap<TKey, TValue> r_pairs;
 	if (!p_keys.is_empty())
@@ -135,7 +129,7 @@ HashMap<TKey, TValue *> VectorHashMapPair<TKey, TValue>::get_const(TightLocalVec
 }
 
 template <typename TKey, typename TValue>
-HashMap<TKey, TValue *> VectorHashMapPair<TKey, TValue>::get(TightLocalVector<TKey> p_keys)
+HashMap<TKey, TValue *> VectorHashMapPair<TKey, TValue>::get(Vector<TKey> p_keys)
 {
 	HashMap<TKey, TValue> r_pairs;
 	if (!p_keys.is_empty())

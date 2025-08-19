@@ -403,70 +403,70 @@ void Tracked::set_uuid_from_string(String p_uuid_string)
 	uuid.set_uuid_string_bind(p_uuid_string);
 }
 
-void TrackedObject::_bind_methods()
+void TrackedResource::_bind_methods()
 {
-	ClassDB::bind_method(D_METHOD("get_uuid"), &TrackedObject::get_uuid_string);
-	ClassDB::bind_method(D_METHOD("set_uuid"), &TrackedObject::set_uuid_from_string);
+	ClassDB::bind_method(D_METHOD("get_uuid"), &TrackedResource::get_uuid_string);
+	ClassDB::bind_method(D_METHOD("set_uuid"), &TrackedResource::set_uuid_from_string);
 
-	ADD_GROUP("Tracked Object", "TrackedObjectGroup_");
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "TrackedObjectGroup_uuid", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT), "set_uuid", "get_uuid");
+	ADD_GROUP("Tracked Resource", "TrackedResourceGroup_");
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "TrackedResourceGroup_uuid", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT), "set_uuid", "get_uuid");
 }
 
-TrackedObject::TrackedObject()
+TrackedResource::TrackedResource()
 	: uuid(UUID())
 {
 }
 
-TrackedObject::TrackedObject(const TrackedObject &p_tracked_object)
+TrackedResource::TrackedResource(const TrackedResource &p_tracked_object)
 	: uuid(p_tracked_object.uuid)
 {
 }
 
-TrackedObject::~TrackedObject()
+TrackedResource::~TrackedResource()
 {
 	uuid.~UUID();
 }
 
-TrackedObject TrackedObject::empty()
+TrackedResource TrackedResource::empty()
 {
-	TrackedObject r_tracked;
+	TrackedResource r_tracked;
 
 	r_tracked.set_uuid(UUID::empty().get_uuid_bind());
 
 	return r_tracked;
 }
 
-const UUID &TrackedObject::get_uuid() const
+const UUID &TrackedResource::get_uuid() const
 {
 	return uuid;
 }
 
-UUID &TrackedObject::get_uuid_m()
+UUID &TrackedResource::get_uuid_m()
 {
 	return uuid;
 }
 
-PackedByteArray TrackedObject::get_uuid_bind() const
+PackedByteArray TrackedResource::get_uuid_bind() const
 {
 	return uuid.get_uuid_bind();
 }
 
-String TrackedObject::get_uuid_string() const
+String TrackedResource::get_uuid_string() const
 {
 	return uuid.get_uuid_string_bind();
 }
 
-void TrackedObject::set_uuid(const UUID &p_uuid)
+void TrackedResource::set_uuid(const UUID &p_uuid)
 {
 	uuid = p_uuid;
 }
 
-void TrackedObject::set_uuid_bind(PackedByteArray p_uuid)
+void TrackedResource::set_uuid_bind(PackedByteArray p_uuid)
 {
 	uuid.set_uuid_bind(p_uuid);
 }
 
-void TrackedObject::set_uuid_from_string(String p_uuid_string)
+void TrackedResource::set_uuid_from_string(String p_uuid_string)
 {
 	uuid.set_uuid_string_bind(p_uuid_string);
 }
