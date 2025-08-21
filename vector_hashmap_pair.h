@@ -8,6 +8,8 @@
 #include "core/templates/hash_map.h"
 #include "core/templates/vector.h"
 
+#include "linked_list.h"
+
 // DEBUG:  Crashes if TValue is not default constructible and trivially destructible
 template <typename TKey, typename TValue>
 class VectorHashMapPair
@@ -15,6 +17,7 @@ class VectorHashMapPair
 private:
 	Vector<TValue> values;
 	HashMap<TKey, uint32_t> values_cache;
+	LinkedList<uint_64_t> holes;
 
 public:
 	bool is_empty() const;

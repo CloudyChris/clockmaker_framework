@@ -2,7 +2,7 @@
 
 #include "vector_hashmap_pair.h"
 
-#include "../../core/error/error_macros.h"
+#include "core/error/error_macros.h"
 
 template <typename TKey, typename TValue>
 VectorHashMapPair<TKey, TValue>::VectorHashMapPair()
@@ -81,6 +81,12 @@ template <typename TKey, typename TValue>
 TValue *VectorHashMapPair<TKey, TValue>::create_one(TKey p_key)
 {
 	uint64_t new_index = values.size();
+
+	if (holes.head)
+	{
+		new_index = holes.pop_head();
+	}
+
 	values.push_back(TValue());
 	values_cache.insert(p_key, new_index);
 
@@ -97,13 +103,8 @@ bool VectorHashMapPair<TKey, TValue>::delete_one(TKey p_key)
 	}
 
 	uint8_t values_index = values_cache.get(p_key);
-
-	if (values_index < values.size())
-	{
-		values.remove_at(values_index);
-	}
-
 	values_cache.erase(p_key);
+	holes.prepend(values_index);
 
 	return true;
 }
@@ -171,13 +172,12 @@ bool VectorHashMapPair<TKey, TValue>::merge(const VectorHashMapPair<TKey, TValue
 		return false;
 	}
 
-	uint64_t new_index;
+	TValue *new_entry = nullptr;
 
 	for (KeyValue<TKey, TValue> kv : p_vhm_pair.values_cache)
 	{
-		new_index = values.size();
-		values.push_back(p_vhm_pair.values[kv.value]);
-		values_cache.insert(kv.key, new_index);
+		new_entry = create_one(kv.key);
+		*new_entry = p_vhm_pair.values[kv.value];
 	}
 
 	return true;
@@ -186,7 +186,7 @@ bool VectorHashMapPair<TKey, TValue>::merge(const VectorHashMapPair<TKey, TValue
 template <typename TKey, typename TValue>
 void VectorHashMapPair<TKey, TValue>::merge_keep(const VectorHashMapPair<TKey, TValue> &p_vhm_pair)
 {
-	uint64_t new_index;
+	TValue *new_entry = nullptr;
 
 	for (KeyValue<TKey, TValue> kv : p_vhm_pair.values_cache)
 	{
@@ -195,9 +195,7 @@ void VectorHashMapPair<TKey, TValue>::merge_keep(const VectorHashMapPair<TKey, T
 			continue;
 		}
 
-		new_index = values.size();
-		values.push_back(p_vhm_pair.values[kv.value]);
-		values_cache.insert(kv.key, new_index);
+		*new_entry = p_vhm_pair.values[kv.value];
 	}
 
 	return;
@@ -206,7 +204,7 @@ void VectorHashMapPair<TKey, TValue>::merge_keep(const VectorHashMapPair<TKey, T
 template <typename TKey, typename TValue>
 void VectorHashMapPair<TKey, TValue>::merge_override(const VectorHashMapPair<TKey, TValue> &p_vhm_pair)
 {
-	uint64_t new_index;
+	TValue *new_entry = nullptr;
 
 	for (KeyValue<TKey, TValue> kv : p_vhm_pair.values_cache)
 	{
@@ -216,9 +214,8 @@ void VectorHashMapPair<TKey, TValue>::merge_override(const VectorHashMapPair<TKe
 		}
 		else
 		{
-			new_index = values.size();
-			values.push_back(p_vhm_pair.values[kv.value]);
-			values_cache.insert(kv.key, new_index);
+			new_entry = create_one(kv.key);
+			*new_entry = p_vhm_pair.values[kv.value];
 		}
 	}
 	return;
