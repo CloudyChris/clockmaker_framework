@@ -1,0 +1,35 @@
+[gd_scene load_steps=4 format=3 uid="uid://g8bq1wxmjxpr"]
+
+[ext_resource type="Script" uid="uid://br5ckbfv46am3" path="res://src/instances/ui/ui_root.gd" id="1_qus76"]
+[ext_resource type="Script" uid="uid://vndhuxjliexq" path="res://src/instances/ui/ui_base_root.gd" id="2_mwro7"]
+[ext_resource type="Script" uid="uid://b40erf26eoqlj" path="res://src/instances/ui/ui_stack_root.gd" id="3_1kx8p"]
+
+[node name="ui_root" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_qus76")
+metadata/_edit_use_anchors_ = true
+
+[node name="ui_base_root" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_mwro7")
+
+[node name="ui_stack_root" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_1kx8p")

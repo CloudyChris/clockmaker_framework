@@ -1,0 +1,86 @@
+[gd_scene load_steps=8 format=3 uid="uid://ddkxu8lotbsko"]
+
+[ext_resource type="Script" uid="uid://c0p6m0020skrr" path="res://src/instances/graph_node/graph_node_instance.gd" id="1_bmqmm"]
+[ext_resource type="Script" uid="uid://ctpa4k1cd6r62" path="res://src/data_types/resources/code_graph/generic/basic_arithmethic_graph_node.gd" id="2_jm8sg"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4r7qb"]
+bg_color = Color(0.17254902, 0.16470589, 0.23921569, 1)
+
+[sub_resource type="Resource" id="Resource_jm8sg"]
+resource_name = "Basic Arithmetic Operation"
+script = ExtResource("2_jm8sg")
+metadata/_custom_type_script = "uid://ctpa4k1cd6r62"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jm8sg"]
+bg_color = Color(0.13333334, 0.12941177, 0.14901961, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_jm8sg"]
+content_margin_left = 8.0
+content_margin_top = 5.0
+content_margin_right = 8.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_3747i"]
+content_margin_left = 8.0
+content_margin_top = 5.0
+content_margin_right = 8.0
+content_margin_bottom = 5.0
+
+[node name="graph_node_instance" type="PanelContainer"]
+offset_right = 225.0
+offset_bottom = 208.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_4r7qb")
+script = ExtResource("1_bmqmm")
+code_graph_node = SubResource("Resource_jm8sg")
+
+[node name="container_stack" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+metadata/_edit_use_anchors_ = true
+
+[node name="title_bar" type="Panel" parent="container_stack"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+mouse_force_pass_scroll_events = false
+theme_override_styles/panel = SubResource("StyleBoxFlat_jm8sg")
+
+[node name="title" type="Label" parent="container_stack/title_bar"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.01
+anchor_top = 0.1
+anchor_right = 0.99
+anchor_bottom = 0.9
+grow_horizontal = 2
+grow_vertical = 2
+focus_behavior_recursive = 1
+mouse_behavior_recursive = 1
+theme_override_styles/normal = SubResource("StyleBoxEmpty_jm8sg")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_3747i")
+text = "Basic Arithmetic Operation"
+horizontal_alignment = 1
+
+[node name="body" type="HBoxContainer" parent="container_stack"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="input_slots" type="VBoxContainer" parent="container_stack/body"]
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="content" type="VBoxContainer" parent="container_stack/body"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="output_slots" type="VBoxContainer" parent="container_stack/body"]
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_constants/separation = 16
